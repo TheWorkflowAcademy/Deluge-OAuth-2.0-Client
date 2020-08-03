@@ -1,0 +1,55 @@
+/*
+ * Get Client Id, Client Secret, and Refresh Token from CRM Variables
+ */
+// Get CRM Variables
+crmVariableResponse = invokeurl [
+	url: "https://www.zohoapis.com/crm/v2/settings/variables"
+	type: GET
+	connection: "zohocrm"
+];
+variables = crmVariableResponse.get("variables");
+// Assign CRM Variables
+for each variable in variables {
+	apiName = variable.get("api_name");
+	if(apiName == "OAuth2_Client_Id") {
+		clientId = variable.get("value");
+	}
+	else if(apiName == "OAuth2_Client_Secret") {
+		clientSecret = variable.get("value");
+	}
+	else if(apiName == "OAuth2_Refresh_Token") {
+		refreshToken = variable.get("value");
+	}
+}
+
+/* 
+ * Refresh the Access Token 
+ */
+// Base URL for the API
+baseUrl = "https://example.com";
+
+// Create Parameters for Refresh Access Token Action. Note: Naming conventions may vary between APIs. Please consult your API documentation for the correct info.
+refreshParams = Map();
+refreshParams.put("grant_type", "refresh_token");
+refreshParams.put("refresh_token", refreshToken);
+
+// Get a new access token from the API. Note: Not every API uses the base64 encoded clientId:clientSecret. Some just add them to the parameters.
+refreshAccessToken = invokeurl [
+	url: baseUrl + "/api/token"
+	type: POST
+	headers: {"Authorization": "Basic " + zoho.encryption.base64Encode(clientId + ":" + clientSecret)}
+	parameters: refreshParams
+];
+
+// Get Access Token from Refresh Access Token call.
+accessToken = refreshAccessToken.get("access_token");
+
+/*
+ * Make the API Call.
+ */
+// Use the Access Token for an API call. 
+requestApi = invokeurl [
+	url: baseUrl + "/endpoint"
+	type: GET
+	headers: {"Authorization": "Bearer " + accessToken}
+];
