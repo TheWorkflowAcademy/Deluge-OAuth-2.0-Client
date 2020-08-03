@@ -1,0 +1,34 @@
+/*
+ * Generate Refresh Token
+ * Prerequisite: You must have already generated an authorization code by following the first steps in your API. If you need help with this, please contact The Workflow Academy at https://www.theworkflowacademy.com
+ * Note: This script should NOT be used in automations. Only use this as a 'Save & Execute" script.
+ */
+// Setup the Base URL and Query Parameters
+baseUrl = "https://www.example.com";
+queryParamMap = Map();
+queryParamMap.put("grant_type", "authorization_code");
+queryParamMap.put("code", AUTHORIZATION_CODE);
+queryParamMap.put("redirect_uri", "https://www.zoho.com/crm/");
+
+// Construct API URL by transforming the query map. Note: This may differ between APIs.
+queryParamString = "";
+for each queryParamKey in queryParamMap.keys() {
+	queryParamString += queryParamKey + "=" + queryParamMap.get(queryParamKey) + "&";
+}
+url =  baseUrl + "/api/token?" + queryParamString.removeLastOccurence("&");
+
+// Construct Headers. Note: This may differ between APIs.
+headers = Map();
+headers.put("Authorization", "Basic " + zoho.encryption.base64Encode(CLIENT_ID + ":" + CLIENT_SECRET));
+headers.put("Content-Type", "application/x-www-form-urlencoded");
+
+// Generate the refresh token.
+generateRefreshToken = invokeurl [
+	url: url
+	type: POST
+	headers: headers
+];
+refreshToken = generateRefreshToken.get("refresh_token");
+
+// Copy and Paste outputted refresh token to a CRM Variable
+info "Refresh Token: " + refreshToken;
